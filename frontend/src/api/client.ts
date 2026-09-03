@@ -9,7 +9,6 @@ const BASE = '/api';
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
-  console.log(`GET ${BASE}${path} - ${res.status}`);
   if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
   return res.json();
 }
