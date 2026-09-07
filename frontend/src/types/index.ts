@@ -90,6 +90,21 @@ export interface ProcedureSummary {
   quantity: number;
 }
 
+export interface AuthorizationsPage {
+  items: AuthorizationSummary[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export interface AuthorizationHistoryEntry {
+  historyId: number;
+  status: string;
+  changedAt: string;
+  changedBy: string | null;
+  notes: string | null;
+}
+
 export interface AuthorizationDetail {
   authorizationId: number;
   referenceNumber: string;

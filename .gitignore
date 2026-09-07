@@ -21,3 +21,6 @@ postgres_data/
 # IDE
 .idea/
 *.DS_Store
+
+# Graphify
+graphify-out/

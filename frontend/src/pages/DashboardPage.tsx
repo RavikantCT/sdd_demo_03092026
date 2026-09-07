@@ -4,8 +4,12 @@ import { api } from '../api/client'
 import type { AuthorizationSummary } from '../types'
 import { STATUS_COLORS, STATUS_BG } from '../types'
 
+const PAGE_SIZE = 20
+
 export default function DashboardPage() {
   const [authorizations, setAuthorizations] = useState<AuthorizationSummary[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('')
@@ -14,8 +18,9 @@ export default function DashboardPage() {
   const load = async () => {
     setLoading(true); setError(null)
     try {
-      const data = await api.authorizations.getAll(statusFilter || undefined)
-      setAuthorizations(data)
+      const data = await api.authorizations.getAll(statusFilter || undefined, page, PAGE_SIZE)
+      setAuthorizations(data.items)
+      setTotalCount(data.totalCount)
     } catch {
       setError('Failed to load authorizations. Is the API running?')
     } finally {
@@ -23,7 +28,9 @@ export default function DashboardPage() {
     }
   }
 
-  useEffect(() => { load() }, [statusFilter])
+  useEffect(() => { load() }, [statusFilter, page])
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
 
   const statuses = ['', 'PENDING', 'IN_REVIEW', 'APPROVED', 'DENIED', 'CANCELLED']
 
@@ -42,14 +49,14 @@ export default function DashboardPage() {
       <div className="card">
         <div className="card-header">
           <span className="card-title">
-            All Requests {authorizations.length > 0 && `(${authorizations.length})`}
+            All Requests {totalCount > 0 && `(${totalCount})`}
           </span>
           <div className="flex gap-2">
             <select
               className="form-select"
               style={{ width: 160 }}
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
+              onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
             >
               {statuses.map(s => (
                 <option key={s} value={s}>{s || 'All Statuses'}</option>
@@ -125,6 +132,28 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && totalCount > 0 && (
+          <div className="card-header" style={{ justifyContent: 'flex-end', gap: 12 }}>
+            <span className="text-muted text-sm">Page {page} of {totalPages}</span>
+            <div className="flex gap-2">
+              <button
+                className="btn btn-secondary btn-sm"
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                ← Prev
+              </button>
+              <button
+                className="btn btn-secondary btn-sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              >
+                Next →
+              </button>
+            </div>
           </div>
         )}
       </div>
