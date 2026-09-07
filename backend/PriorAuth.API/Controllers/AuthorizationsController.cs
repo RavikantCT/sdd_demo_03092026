@@ -145,14 +145,52 @@ public class AuthorizationsController : ControllerBase
         if (auth == null) return NotFound();
 
         var validStatuses = new[] { "PENDING", "APPROVED", "DENIED", "CANCELLED", "IN_REVIEW" };
-        if (!validStatuses.Contains(request.Status.ToUpper()))
+        var newStatus = request.Status.ToUpper();
+        if (!validStatuses.Contains(newStatus))
             return BadRequest($"Invalid status. Must be one of: {string.Join(", ", validStatuses)}");
 
-        auth.Status = request.Status.ToUpper();
+        var allowedTransitions = new Dictionary<string, string[]>
+        {
+            ["PENDING"] = new[] { "IN_REVIEW", "CANCELLED" },
+            ["IN_REVIEW"] = new[] { "APPROVED", "DENIED", "CANCELLED" },
+            ["APPROVED"] = Array.Empty<string>(),
+            ["DENIED"] = Array.Empty<string>(),
+            ["CANCELLED"] = Array.Empty<string>()
+        };
+
+        if (!allowedTransitions[auth.Status].Contains(newStatus))
+            return BadRequest($"Invalid status transition from {auth.Status} to {newStatus}.");
+
+        _db.StatusHistories.Add(new StatusHistory
+        {
+            AuthorizationId = auth.AuthorizationId,
+            PreviousStatus = auth.Status,
+            NewStatus = newStatus,
+            ChangedBy = null,
+            ChangedAt = DateTime.UtcNow
+        });
+
+        auth.Status = newStatus;
         auth.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpGet("{id:int}/history")]
+    public async Task<ActionResult<List<StatusHistoryDto>>> GetHistory(int id)
+    {
+        var exists = await _db.Authorizations.AnyAsync(a => a.AuthorizationId == id);
+        if (!exists) return NotFound();
+
+        var history = await _db.StatusHistories
+            .Where(sh => sh.AuthorizationId == id)
+            .OrderByDescending(sh => sh.ChangedAt)
+            .Select(sh => new StatusHistoryDto(
+                sh.Id, sh.PreviousStatus, sh.NewStatus, sh.ChangedBy, sh.ChangedAt))
+            .ToListAsync();
+
+        return Ok(history);
     }
 
     private static AuthorizationDetailDto MapToDetail(Authorization a)

@@ -2,7 +2,7 @@ import type {
   HealthPlan, Member, Provider, Site,
   DiagnosisCode, ProcedureCode,
   AuthorizationSummary, AuthorizationDetail,
-  CreateAuthorizationRequest
+  CreateAuthorizationRequest, StatusHistory
 } from '../types';
 
 const BASE = '/api';
@@ -62,5 +62,6 @@ export const api = {
       post<AuthorizationDetail>('/authorizations', req),
     updateStatus: (id: number, status: string) =>
       patch(`/authorizations/${id}/status`, { status }),
+    getHistory: (id: number) => get<StatusHistory[]>(`/authorizations/${id}/history`),
   },
 };

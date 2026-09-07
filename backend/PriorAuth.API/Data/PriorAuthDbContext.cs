@@ -16,6 +16,7 @@ public class PriorAuthDbContext : DbContext
     public DbSet<Authorization> Authorizations => Set<Authorization>();
     public DbSet<AuthorizationProcedure> AuthorizationProcedures => Set<AuthorizationProcedure>();
     public DbSet<AuthorizationDiagnosis> AuthorizationDiagnoses => Set<AuthorizationDiagnosis>();
+    public DbSet<StatusHistory> StatusHistories => Set<StatusHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,5 +68,12 @@ public class PriorAuthDbContext : DbContext
             .WithMany()
             .HasForeignKey(ad => ad.DiagnosisCode)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Authorization → StatusHistory
+        modelBuilder.Entity<StatusHistory>()
+            .HasOne(sh => sh.Authorization)
+            .WithMany()
+            .HasForeignKey(sh => sh.AuthorizationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
