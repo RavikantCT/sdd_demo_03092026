@@ -20,7 +20,7 @@ public class AuthorizationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<AuthorizationSummaryDto>>> GetAll(
+    public async Task<ActionResult<AuthorizationsPageDto>> GetAll(
         [FromQuery] string? status,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -33,6 +33,8 @@ public class AuthorizationsController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(a => a.Status == status.ToUpper());
+
+        var totalCount = await query.CountAsync();
 
         var results = await query
             .OrderByDescending(a => a.CreatedAt)
@@ -51,7 +53,7 @@ public class AuthorizationsController : ControllerBase
             ))
             .ToListAsync();
 
-        return Ok(results);
+        return Ok(new AuthorizationsPageDto(results, page, pageSize, totalCount));
     }
 
     [HttpGet("{id:int}")]
@@ -70,6 +72,22 @@ public class AuthorizationsController : ControllerBase
         if (auth == null) return NotFound();
 
         return Ok(MapToDetail(auth));
+    }
+
+    [HttpGet("{id:int}/history")]
+    public async Task<ActionResult<List<AuthorizationHistoryDto>>> GetHistory(int id)
+    {
+        var exists = await _db.Authorizations.AnyAsync(a => a.AuthorizationId == id);
+        if (!exists) return NotFound();
+
+        var history = await _db.AuthorizationStatusHistories
+            .Where(h => h.AuthorizationId == id)
+            .OrderBy(h => h.ChangedAt)
+            .Select(h => new AuthorizationHistoryDto(
+                h.HistoryId, h.Status, h.ChangedAt, h.ChangedBy, h.Notes))
+            .ToListAsync();
+
+        return Ok(history);
     }
 
     [HttpPost]
@@ -118,6 +136,14 @@ public class AuthorizationsController : ControllerBase
                 IsPrimary = diagCode == request.PrimaryDiagnosis
             });
         }
+
+        _db.AuthorizationStatusHistories.Add(new AuthorizationStatusHistory
+        {
+            AuthorizationId = auth.AuthorizationId,
+            Status = auth.Status,
+            ChangedAt = auth.CreatedAt,
+            Notes = "Request submitted."
+        });
 
         await _db.SaveChangesAsync();
 
@@ -172,6 +198,14 @@ public class AuthorizationsController : ControllerBase
 
         auth.Status = newStatus;
         auth.UpdatedAt = DateTime.UtcNow;
+
+        _db.AuthorizationStatusHistories.Add(new AuthorizationStatusHistory
+        {
+            AuthorizationId = auth.AuthorizationId,
+            Status = auth.Status,
+            ChangedAt = auth.UpdatedAt
+        });
+
         await _db.SaveChangesAsync();
 
         return NoContent();

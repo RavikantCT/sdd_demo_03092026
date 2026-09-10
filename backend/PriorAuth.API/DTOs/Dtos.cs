@@ -88,6 +88,21 @@ public record AuthorizationSummaryDto(
     string? PrimaryDiagnosis
 );
 
+public record AuthorizationsPageDto(
+    List<AuthorizationSummaryDto> Items,
+    int Page,
+    int PageSize,
+    int TotalCount
+);
+
+public record AuthorizationHistoryDto(
+    int HistoryId,
+    string Status,
+    DateTime ChangedAt,
+    string? ChangedBy,
+    string? Notes
+);
+
 public record AuthorizationDetailDto(
     int AuthorizationId,
     string ReferenceNumber,

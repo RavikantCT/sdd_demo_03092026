@@ -289,26 +289,24 @@ public class AuthorizationDiagnosis
     public DiagnosisCode? Diagnosis { get; set; }
 }
 
-[Table("status_history")]
-public class StatusHistory
+[Table("authorization_status_history")]
+public class AuthorizationStatusHistory
 {
-    [Key, Column("id")]
-    public int Id { get; set; }
+    [Key, Column("history_id")]
+    public int HistoryId { get; set; }
 
     [Column("authorization_id")]
     public int AuthorizationId { get; set; }
 
-    [Column("previous_status")]
-    public string? PreviousStatus { get; set; }
-
-    [Column("new_status")]
-    public string NewStatus { get; set; } = string.Empty;
-
-    [Column("changed_by")]
-    public string? ChangedBy { get; set; }
+    [Column("status")]
+    public string Status { get; set; } = string.Empty;
 
     [Column("changed_at")]
     public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
-    public Authorization? Authorization { get; set; }
+    [Column("changed_by")]
+    public string? ChangedBy { get; set; }
+
+    [Column("notes")]
+    public string? Notes { get; set; }
 }
