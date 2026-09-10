@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { AuthorizationDetail } from '../types'
 import { STATUS_COLORS, STATUS_BG } from '../types'
+import HistoryPanel from '../components/HistoryPanel'
 
 export default function AuthorizationDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -259,6 +260,8 @@ export default function AuthorizationDetailPage() {
           )}
         </div>
       </div>
+
+      <HistoryPanel authorizationId={auth.authorizationId} />
     </>
   )
 }

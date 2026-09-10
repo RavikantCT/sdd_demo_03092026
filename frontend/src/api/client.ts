@@ -1,7 +1,7 @@
 import type {
   HealthPlan, Member, Provider, Site,
   DiagnosisCode, ProcedureCode,
-  AuthorizationSummary, AuthorizationDetail,
+  AuthorizationDetail, AuthorizationsPage, AuthorizationHistoryEntry,
   CreateAuthorizationRequest
 } from '../types';
 
@@ -9,7 +9,6 @@ const BASE = '/api';
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
-  console.log(`GET ${BASE}${path} - ${res.status}`);
   if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`);
   return res.json();
 }
@@ -56,9 +55,13 @@ export const api = {
     search: (q: string) => get<ProcedureCode[]>(`/procedurecodes?q=${encodeURIComponent(q)}`),
   },
   authorizations: {
-    getAll: (status?: string) =>
-      get<AuthorizationSummary[]>(`/authorizations${status ? `?status=${status}` : ''}`),
+    getAll: (status?: string, page = 1, pageSize = 20) => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (status) params.set('status', status);
+      return get<AuthorizationsPage>(`/authorizations?${params.toString()}`);
+    },
     getById: (id: number) => get<AuthorizationDetail>(`/authorizations/${id}`),
+    getHistory: (id: number) => get<AuthorizationHistoryEntry[]>(`/authorizations/${id}/history`),
     create: (req: CreateAuthorizationRequest) =>
       post<AuthorizationDetail>('/authorizations', req),
     updateStatus: (id: number, status: string) =>

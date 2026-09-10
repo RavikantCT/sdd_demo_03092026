@@ -123,6 +123,15 @@ CREATE TABLE authorization_diagnoses (
     is_primary          BOOLEAN NOT NULL DEFAULT false
 );
 
+CREATE TABLE authorization_status_history (
+    history_id          SERIAL PRIMARY KEY,
+    authorization_id    INTEGER NOT NULL REFERENCES authorizations(authorization_id) ON DELETE CASCADE,
+    status              VARCHAR(30) NOT NULL,
+    changed_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+    changed_by          VARCHAR(100),
+    notes               TEXT
+);
+
 -- Reference number generator
 CREATE SEQUENCE auth_ref_seq START 100001;
 
