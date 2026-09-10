@@ -122,6 +122,14 @@ export interface AuthorizationDetail {
   notes: string | null;
 }
 
+export interface StatusHistory {
+  id: number;
+  previousStatus: string | null;
+  newStatus: string;
+  changedBy: string | null;
+  changedAt: string;
+}
+
 // Wizard state — accumulated across all steps
 export interface WizardState {
   program: string;

@@ -125,3 +125,11 @@ public record ProcedureSummary(
     string Description,
     int Quantity
 );
+
+public record StatusHistoryDto(
+    int Id,
+    string? PreviousStatus,
+    string NewStatus,
+    string? ChangedBy,
+    DateTime ChangedAt
+);

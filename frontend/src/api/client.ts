@@ -66,5 +66,6 @@ export const api = {
       post<AuthorizationDetail>('/authorizations', req),
     updateStatus: (id: number, status: string) =>
       patch(`/authorizations/${id}/status`, { status }),
+    getHistory: (id: number) => get<StatusHistory[]>(`/authorizations/${id}/history`),
   },
 };

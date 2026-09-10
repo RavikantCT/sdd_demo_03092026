@@ -68,5 +68,12 @@ public class PriorAuthDbContext : DbContext
             .WithMany()
             .HasForeignKey(ad => ad.DiagnosisCode)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Authorization → StatusHistory
+        modelBuilder.Entity<StatusHistory>()
+            .HasOne(sh => sh.Authorization)
+            .WithMany()
+            .HasForeignKey(sh => sh.AuthorizationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
